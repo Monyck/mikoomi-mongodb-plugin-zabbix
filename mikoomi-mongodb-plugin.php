@@ -122,8 +122,8 @@ function write_to_data_file($output_line)
 //-----------------------------
 // Setup connection to mongoDB
 //-----------------------------
-$mongodb_host = empty($options['h']) ? Mongo::DEFAULT_HOST : $options['h'] ;
-$mongodb_port = empty($options['p']) ? Mongo::DEFAULT_PORT : $options['p']  ;
+$mongodb_host = empty($options['h']) ? MongoClient::DEFAULT_HOST : $options['h'] ;
+$mongodb_port = empty($options['p']) ? MongoClient::DEFAULT_PORT : $options['p']  ;
 
 if ((!empty($options['u'])) && (!empty($options['x']))) {
     $connect_string = $options['u'] . ':' . $options['x'] . '@' . $mongodb_host . ':' . $mongodb_port  ;
@@ -132,7 +132,7 @@ else {
     $connect_string = $mongodb_host . ':' . $mongodb_port ;
 }
 
-$mongo_connection = new Mongo("mongodb://$connect_string") ;
+$mongo_connection = new MongoClient("mongodb://$connect_string/admin");
 
 if (is_null($mongo_connection)) {
     write_to_log_file("$command_name:Error in connection to mongoDB using connect string $connect_string") ;
