@@ -1534,7 +1534,7 @@
             <application>MongoDB Memory</application>
           </applications>
         </item>
-        <item type="10" key="mikoomi-mongodb-plugin.sh[-h {$MONGODB_HOSTNAME} -p {$MONGODB_PORT} -z {$MONGODB_ZABBIX_NAME} -u {$MONGODB_USER} -x {$MONGODB_PASS}]" value_type="3">
+        <item type="10" key="mikoomi-mongodb-plugin.sh[&quot;-D&quot;,&quot;-h&quot;,&quot;{$MONGODB_HOSTNAME}&quot;,&quot;-p&quot;,&quot;{$MONGODB_PORT}&quot;,&quot;-z&quot;,&quot;{$MONGODB_ZABBIX_NAME}&quot;]" value_type="3">
           <description>Miscellaneous: Data Collector</description>
           <ipmi_sensor></ipmi_sensor>
           <delay>60</delay>
