@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 error_reporting(E_PARSE) ;
 
+
 $options = getopt("Dh:p:z:u:x:") ;
 $command_name = basename($argv[0]) ;
 $command_version = "0.3" ;
