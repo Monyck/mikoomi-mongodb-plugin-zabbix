@@ -27,7 +27,6 @@ THE SOFTWARE.
 
 error_reporting(E_PARSE) ;
 
-
 $options = getopt("Dh:p:z:u:x:") ;
 $command_name = basename($argv[0]) ;
 $command_version = "0.3" ;
@@ -123,8 +122,8 @@ function write_to_data_file($output_line)
 //-----------------------------
 // Setup connection to mongoDB
 //-----------------------------
-$mongodb_host = empty($options['h']) ? MongoClient::DEFAULT_HOST : $options['h'] ;
-$mongodb_port = empty($options['p']) ? MongoClient::DEFAULT_PORT : $options['p']  ;
+$mongodb_host = empty($options['h']) ? Mongo::DEFAULT_HOST : $options['h'] ;
+$mongodb_port = empty($options['p']) ? Mongo::DEFAULT_PORT : $options['p']  ;
 
 if ((!empty($options['u'])) && (!empty($options['x']))) {
     $connect_string = $options['u'] . ':' . $options['x'] . '@' . $mongodb_host . ':' . $mongodb_port  ;
@@ -133,7 +132,7 @@ else {
     $connect_string = $mongodb_host . ':' . $mongodb_port ;
 }
 
-$mongo_connection = new MongoClient("mongodb://$connect_string/admin");
+$mongo_connection = new Mongo("mongodb://$connect_string") ;
 
 if (is_null($mongo_connection)) {
     write_to_log_file("$command_name:Error in connection to mongoDB using connect string $connect_string") ;
@@ -198,20 +197,41 @@ write_to_data_file("$zabbix_name extra_info_heap_usage $extra_info_heap_usage") 
 $extra_info_page_faults = $server_status['extra_info']['page_faults'] ;
 write_to_data_file("$zabbix_name extra_info_page_faults $extra_info_page_faults") ;
 
-$indexCounters_btree_accesses = $server_status['indexCounters']['btree']['accesses'] ;
-write_to_data_file("$zabbix_name indexCounters_btree_accesses $indexCounters_btree_accesses") ;
+// http://docs.mongodb.org/manual/reference/command/serverStatus/#indexcounters
+// 24.04.2014
+if (strnatcmp($mongo_version, "2.4") >= 0) {
+    $indexCounters_btree_accesses = $server_status['indexCounters']['accesses'] ;
+    write_to_data_file("$zabbix_name indexCounters_accesses $indexCounters_btree_accesses") ;
+ 
+    $indexCounters_btree_hits = $server_status['indexCounters']['hits'] ;
+    write_to_data_file("$zabbix_name indexCounters_hits $indexCounters_btree_hits") ;
+ 
+    $indexCounters_btree_misses = $server_status['indexCounters']['misses'] ;
+    write_to_data_file("$zabbix_name indexCounters_misses $indexCounters_btree_misses") ;
+ 
+    $indexCounters_btree_resets = $server_status['indexCounters']['resets'] ;
+    write_to_data_file("$zabbix_name indexCounters_resets $indexCounters_btree_resets") ;
+ 
+    $indexCounters_btree_missRatio = $server_status['indexCounters']['missRatio'] ;
+    write_to_data_file("$zabbix_name indexCounters_missRatio $indexCounters_btree_missRatio") ;
+}
+else
+{
+    $indexCounters_btree_accesses = $server_status['indexCounters']['btree']['accesses'] ;
+    write_to_data_file("$zabbix_name indexCounters_btree_accesses $indexCounters_btree_accesses") ;
+ 
+    $indexCounters_btree_hits = $server_status['indexCounters']['btree']['hits'] ;
+    write_to_data_file("$zabbix_name indexCounters_btree_hits $indexCounters_btree_hits") ;
 
-$indexCounters_btree_hits = $server_status['indexCounters']['btree']['hits'] ;
-write_to_data_file("$zabbix_name indexCounters_btree_hits $indexCounters_btree_hits") ;
+    $indexCounters_btree_misses = $server_status['indexCounters']['btree']['misses'] ;
+    write_to_data_file("$zabbix_name indexCounters_btree_misses $indexCounters_btree_misses") ;
 
-$indexCounters_btree_misses = $server_status['indexCounters']['btree']['misses'] ;
-write_to_data_file("$zabbix_name indexCounters_btree_misses $indexCounters_btree_misses") ;
+    $indexCounters_btree_resets = $server_status['indexCounters']['btree']['resets'] ;
+    write_to_data_file("$zabbix_name indexCounters_btree_resets $indexCounters_btree_resets") ;
 
-$indexCounters_btree_resets = $server_status['indexCounters']['btree']['resets'] ;
-write_to_data_file("$zabbix_name indexCounters_btree_resets $indexCounters_btree_resets") ;
-
-$indexCounters_btree_missRatio = $server_status['indexCounters']['btree']['missRatio'] ;
-write_to_data_file("$zabbix_name indexCounters_btree_missRatio $indexCounters_btree_missRatio") ;
+    $indexCounters_btree_missRatio = $server_status['indexCounters']['btree']['missRatio'] ;
+    write_to_data_file("$zabbix_name indexCounters_btree_missRatio $indexCounters_btree_missRatio") ;
+}
 
 $backgroundFlushing_flushes = $server_status['backgroundFlushing']['flushes'] ;
 write_to_data_file("$zabbix_name backgroundFlushing_flushes $backgroundFlushing_flushes") ;
@@ -306,25 +326,13 @@ write_to_data_file("$zabbix_name logging_datafile_write_time_ms $logging_datafil
 //-----------------------------
 // Get DB list and cumulative DB info
 //-----------------------------
-//$db_list = $mongo_connection->listDBs() ;
-
-//pravka
-function countbase($in, $w) {
-    return preg_match_all('#'.$w.'#smiU', $in, $match);
-}
-//$mongo = new Mongo();
 $db_list = $mongo_connection->listDBs() ;
-$in=print_r($db_list, true);
-$w = 'Array';
-$t=countbase($in, $w) -2;
-//echo $t;
-$db_count = $t ;
 
-//$db_count = count($db_list) ;
+$db_count = count($db_list) ;
 write_to_data_file("$zabbix_name db_count $db_count") ;
-//pravka
+
 $totalSize = round(($db_list['totalSize'])/(1024*1024), 2) ;
-write_to_data_file("$zabbix_name totalSize $totalSize") ;
+write_to_data_file("$zabbix_name totalSize_mb $totalSize") ;
 
 $sharded_db_count = 0 ;
 $total_collection_count = 0 ;
@@ -420,7 +428,7 @@ if ($is_sharded == 'No') {
    $mongo_db_handle = $mongo_connection->selectDB('admin') ;
    $rs_status = $mongo_db_handle->command(array('replSetGetStatus'=>1)) ;
 
-   if (!($rs_status)) {
+   if (!($rs_status) || isset($rs_status['errmsg'])) {
        write_to_data_file("$zabbix_name is_replica_set No") ;
    }
    else {
@@ -551,7 +559,7 @@ write_to_data_file("$zabbix_name mongoDB_plugin_checksum $md5_checksum_string") 
 
 fclose($data_file_handle) ;
 
-exec("zabbix_sender -vv -z 127.0.0.1 -i $data_file_name 2>&1", $log_file_data) ;
+exec("/usr/bin/zabbix_sender -vv -z 172.26.5.63 -i $data_file_name 2>&1", $log_file_data) ;
 
 foreach ($log_file_data as $log_line) {
     write_to_log_file("$log_line\n") ;
