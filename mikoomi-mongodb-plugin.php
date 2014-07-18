@@ -559,7 +559,7 @@ write_to_data_file("$zabbix_name mongoDB_plugin_checksum $md5_checksum_string") 
 
 fclose($data_file_handle) ;
 
-exec("/usr/bin/zabbix_sender -vv -z 172.26.5.63 -i $data_file_name 2>&1", $log_file_data) ;
+exec("/usr/bin/zabbix_sender -vv -z 127.0.0.1 -i $data_file_name 2>&1", $log_file_data) ;
 
 foreach ($log_file_data as $log_line) {
     write_to_log_file("$log_line\n") ;
